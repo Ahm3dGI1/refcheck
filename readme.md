@@ -1,0 +1,2 @@
+# refcheck
+refcheck is planned to be a tool for comparing migrated functions to the original implementation. It should be able to check for diffs in return, performance, and mutation to arguments, global variables, and environment variables. It should also be able to check for differences in the function signature, including the number and types of arguments, as well as any changes to the return type.

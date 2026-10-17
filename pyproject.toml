@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "refcheck"
+version = "0.1.0"
+description = "Compare function behavior, performance, and mutations."
+readme = "readme.md"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+src = ["src"]
+extend-exclude = ["venv", ".tmp"]
+
+[tool.ruff.lint]
+extend-select = ["I"]

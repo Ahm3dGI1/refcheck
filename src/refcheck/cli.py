@@ -1,22 +1,32 @@
-from types.comparison_results import ComparisonResults
-from typing import Any, Callable
+import importlib
+import inspect
+from collections.abc import Callable
+from typing import Any
 
-def compare(original_func: Callable, migrated_func: Callable, input_data: dict[str, list[Any]]) -> ComparisonResults:
+
+def load_function_from_file(file_path: str) -> Callable:
+
+    module_name, function_name = file_path.replace('/', '.').split(':')
+
+    module = importlib.import_module(module_name)
+    function = getattr(module, function_name)
+
+    return function
+
+def get_function_signature(func: Callable) -> dict[str, dict[str, Any]]:
     """
-    Initial implementation: compare to basic functions given an input
+    Get the signature of a function as a string.
     """
+    function_signature = inspect.signature(func)
 
-    comparison_results = {}
+    parameters = {}
 
-    for case_name, inputs in input_data.items():
-        original_result = original_func(*inputs)
-        migrated_result = migrated_func(*inputs)
-        
-        comparison_results[case_name] = ComparisonResults(
-            return_diff=original_result != migrated_result,
-            performance_diff=False,
-            mutation_diff=False
-        )
-        
+    for name, param in function_signature.parameters.items():
+        parameters[name] = {
+            "default": param.default if param.default is not inspect.Parameter.empty else None,
+            "annotation": str(param.annotation) if param.annotation is not inspect.Parameter.empty else None,
+            "kind": str(param.kind)
+        }
 
-    return comparison_results
+
+    return parameters

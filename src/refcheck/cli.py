@@ -1,32 +1,17 @@
-import importlib
-import inspect
-from collections.abc import Callable
-from typing import Any
+from refcheck.loader.loader import get_function_signature, load_function_from_file
 
+if __name__ == "__main__":
+    import sys
 
-def load_function_from_file(file_path: str) -> Callable:
+    if len(sys.argv) != 2:
+        print("Usage: python cli.py <file_path>")
+        sys.exit(1)
 
-    module_name, function_name = file_path.replace('/', '.').split(':')
+    file_path = sys.argv[1]
+    func = load_function_from_file(file_path)
+    signature = get_function_signature(func)
 
-    module = importlib.import_module(module_name)
-    function = getattr(module, function_name)
-
-    return function
-
-def get_function_signature(func: Callable) -> dict[str, dict[str, Any]]:
-    """
-    Get the signature of a function as a string.
-    """
-    function_signature = inspect.signature(func)
-
-    parameters = {}
-
-    for name, param in function_signature.parameters.items():
-        parameters[name] = {
-            "default": param.default if param.default is not inspect.Parameter.empty else None,
-            "annotation": str(param.annotation) if param.annotation is not inspect.Parameter.empty else None,
-            "kind": str(param.kind)
-        }
-
-
-    return parameters
+    print(f"Function: {func.__name__}")
+    print("Signature:")
+    for param, details in signature.items():
+        print(f"  {param}: {details}")

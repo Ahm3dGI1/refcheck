@@ -1,4 +1,4 @@
-docs/plan.md
+docs
 venv
 __pycache__/
 *.egg-info/

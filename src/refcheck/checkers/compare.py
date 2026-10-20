@@ -1,8 +1,8 @@
 from collections.abc import Callable
 from typing import Any
 
+from refcheck.checkers.performance import get_performance
 from refcheck.models import ComparisonResults
-from refcheck.performance import get_performance
 
 
 def compare(original_func: Callable, migrated_func: Callable, input_data: dict[str, list[Any]], **kwargs) -> dict[str, ComparisonResults]:

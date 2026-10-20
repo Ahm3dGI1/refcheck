@@ -7,10 +7,10 @@ from refcheck.loader.loader import load_function_from_file
 
 class LoaderTests(unittest.TestCase):
     def test_dotted_module(self):
-        from refcheck.comparison.compare import compare
+        from refcheck.checkers.compare import compare
 
         self.assertIs(
-            load_function_from_file("refcheck.comparison.compare:compare"), compare
+            load_function_from_file("refcheck.checkers.compare:compare"), compare
         )
 
     def test_relative_windows_path_without_extension(self):
@@ -19,7 +19,7 @@ class LoaderTests(unittest.TestCase):
         if os.name != "nt":
             self.skipTest("Windows path syntax")
         function = load_function_from_file(
-            r".\src\refcheck\comparison\compare:compare"
+            r".\src\refcheck\checkers\compare:compare"
         )
         self.assertEqual(function.__name__, "compare")
 

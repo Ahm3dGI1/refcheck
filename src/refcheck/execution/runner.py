@@ -5,8 +5,9 @@ from refcheck.generators.input_generation import (
 )
 
 
-def run_generated_inputs(func, max_examples=10):
-    strategy = generate_inputs_strategies(func)
+
+def run_generated_inputs(original_func, migrated_func, max_examples=10):
+    strategy = generate_inputs_strategies(original_func)
 
     @settings(
         max_examples=max_examples,
@@ -17,14 +18,24 @@ def run_generated_inputs(func, max_examples=10):
     def run_case(args):
         inputs_before = repr(args)
 
-        try:
-            result = func(*args)
-        except Exception as error:  # noqa: BLE001 -- Report target failures and continue generating cases.
-            print(
-                f"inputs={inputs_before} -> "
-                f"raised {type(error).__name__}: {error}"
-            )
-        else:
-            print(f"inputs={inputs_before} -> return={result!r}")
+        original_results = {}
+        migrated_results = {}
 
-    run_case()
+        try:
+            original_result = original_func(*args)
+        except Exception as error:  # noqa: BLE001 -- Report target failures and continue generating cases.
+            original_results[inputs_before] = f"raised {type(error).__name__}: {error}"
+        else:
+            original_results[inputs_before] = original_result
+
+
+        try:
+            migrated_result = migrated_func(*args)
+        except Exception as error:  # noqa: BLE001 -- Report target failures and continue generating cases.
+            migrated_results[inputs_before] = f"raised {type(error).__name__}: {error}"
+        else:
+            migrated_results[inputs_before] = migrated_result
+
+        return original_results, migrated_results
+
+    return run_case()

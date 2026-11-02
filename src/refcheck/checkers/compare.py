@@ -37,6 +37,8 @@ def compare(
     )
     return {
         case_name: ComparisonResults(
+            execution_Result_original=original,
+            execution_Result_migrated=migrated_results[case_name],
             return_diff=_outcomes_differ(original, migrated_results[case_name]),
             performance_original=None,
             performance_migrated=None,
@@ -74,6 +76,8 @@ def compare_with_performance(
                 case_name
             ]
         comparison_results[case_name] = ComparisonResults(
+            execution_Result_original=original,
+            execution_Result_migrated=migrated,
             return_diff=_outcomes_differ(original, migrated),
             performance_original=original_time,
             performance_migrated=migrated_time,

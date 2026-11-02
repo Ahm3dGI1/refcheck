@@ -15,6 +15,8 @@ class ExecutionResult:
 class ComparisonResults:
     def __init__(
         self,
+        execution_Result_original: ExecutionResult,
+        execution_Result_migrated: ExecutionResult,
         return_diff: bool,
         performance_original: float | None,
         performance_migrated: float | None,
@@ -24,6 +26,8 @@ class ComparisonResults:
         self.performance_original = performance_original
         self.performance_migrated = performance_migrated
         self.mutation_diff = mutation_diff
+        self.execution_Result_original = execution_Result_original
+        self.execution_Result_migrated = execution_Result_migrated
 
     def __str__(self) -> str:
         return f"ComparisonResults(return_diff={self.return_diff}, performance_original={self.performance_original}, performance_migrated={self.performance_migrated}, mutation_diff={self.mutation_diff})"

@@ -9,13 +9,6 @@ def generate_inputs_strategies(func):
     signature = inspect.signature(func)
     hints = get_type_hints(func)
 
-    supported_types = {
-        int: st.integers(),
-        float: st.floats(),
-        str: st.text(),
-        bool: st.booleans(),
-    }
-
     strategies = []
 
     for name, parameter in signature.parameters.items():
@@ -32,11 +25,6 @@ def generate_inputs_strategies(func):
 
         annotation = hints[name]
 
-        if annotation not in supported_types:
-            raise ValueError(
-                f"{name}: unsupported type {annotation!r}"
-            )
-
-        strategies.append(supported_types[annotation])
+        strategies.append(st.from_type(annotation))
 
     return st.tuples(*strategies)

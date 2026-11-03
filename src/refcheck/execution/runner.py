@@ -28,10 +28,9 @@ def run_generated_inputs(
     max_examples: int = 10,
     *,
     input_data: dict[str, list[Any]] | None = None,
-) -> tuple[dict[str, ExecutionResult], dict[str, ExecutionResult]]:
+) -> dict[str, tuple[ExecutionResult, ExecutionResult]]:
     """Run both targets with independent copies of each input case."""
-    original_results = {}
-    migrated_results = {}
+    results = {}
     original_signature = inspect.signature(original_func)
     migrated_signature = inspect.signature(migrated_func)
 
@@ -42,8 +41,10 @@ def run_generated_inputs(
         # Reject incompatible calls before treating errors as target behavior.
         original_signature.bind(*args)
         migrated_signature.bind(*args)
-        original_results[case_name] = _execute(original_func, args)
-        migrated_results[case_name] = _execute(migrated_func, args)
+        results[case_name] = (
+            _execute(original_func, args),
+            _execute(migrated_func, args),
+        )
 
     if input_data is not None:
         for case_name, inputs in input_data.items():
@@ -54,8 +55,8 @@ def run_generated_inputs(
         @settings(max_examples=max_examples, deadline=None, database=None)
         @given(args=strategy)
         def run_case(args):
-            run_pair(f"case_{len(original_results) + 1}", args)
+            run_pair(f"case_{len(results) + 1}", args)
 
         run_case()
 
-    return original_results, migrated_results
+    return results

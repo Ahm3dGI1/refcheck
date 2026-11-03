@@ -32,19 +32,19 @@ def compare(
     max_examples: int = 10,
 ) -> dict[str, ComparisonResults]:
     """Compare returns and exceptions using explicit or generated inputs."""
-    original_results, migrated_results = run_generated_inputs(
+    results = run_generated_inputs(
         original_func, migrated_func, max_examples, input_data=input_data
     )
     return {
         case_name: ComparisonResults(
             execution_Result_original=original,
-            execution_Result_migrated=migrated_results[case_name],
-            return_diff=_outcomes_differ(original, migrated_results[case_name]),
+            execution_Result_migrated=migrated,
+            return_diff=_outcomes_differ(original, migrated),
             performance_original=None,
             performance_migrated=None,
             mutation_diff=False,
         )
-        for case_name, original in original_results.items()
+        for case_name, (original, migrated) in results.items()
     }
 
 
@@ -59,12 +59,11 @@ def compare_with_performance(
     """Compare outcomes and average timings; exception cases are not timed."""
     if num_executions < 1:
         raise ValueError("num_executions must be positive")
-    original_results, migrated_results = run_generated_inputs(
+    results = run_generated_inputs(
         original_func, migrated_func, max_examples, input_data=input_data
     )
     comparison_results = {}
-    for case_name, original in original_results.items():
-        migrated = migrated_results[case_name]
+    for case_name, (original, migrated) in results.items():
         original_time = None
         migrated_time = None
         if original.exception_type is None and migrated.exception_type is None:

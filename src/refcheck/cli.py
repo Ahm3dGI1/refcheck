@@ -1,5 +1,28 @@
 from refcheck.checkers.compare import compare
 from refcheck.loader.loader import load_function_from_file
+from refcheck.models import ComparisonResults
+
+
+def print_results(results: dict[str, ComparisonResults]) -> None:
+    differences = 0
+    incomplete = 0
+    for case_name, result in results.items():
+        different = result.return_diff or bool(result.mutation_diff)
+        if different:
+            status = "DIFFERENT"
+            differences += 1
+        elif result.mutation_diff is None:
+            status = "INCOMPLETE"
+        else:
+            status = "MATCH"
+        if result.mutation_diff is None:
+            incomplete += 1
+            status += " (mutation comparison unavailable)"
+        print(f"{case_name}: {status}")
+    print(f"Compared {len(results)} cases; {differences} different.")
+    if incomplete:
+        print(f"Mutation comparison unavailable for {incomplete} cases.")
+
 
 if __name__ == "__main__":
     import sys
@@ -14,8 +37,4 @@ if __name__ == "__main__":
     modified_func = load_function_from_file(modified_path)
 
     results = compare(original_func, modified_func, max_examples=10)
-    for case_name, result in results.items():
-        status = "DIFFERENT" if result.return_diff else "MATCH"
-        print(f"{case_name}: {status}")
-    differences = sum(result.return_diff for result in results.values())
-    print(f"Compared {len(results)} cases; {differences} different.")
+    print_results(results)

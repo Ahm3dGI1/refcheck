@@ -1,7 +1,12 @@
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+
+from refcheck.cli import print_results
+from refcheck.models import ComparisonResults, ExecutionResult
 
 
 class CliTests(unittest.TestCase):
@@ -38,3 +43,49 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(process.returncode, 1)
         self.assertIn("Usage:", process.stdout)
+
+    def test_mutation_only_difference_is_reported(self):
+        result = ComparisonResults(
+            ExecutionResult(arguments=([],), arguments_after=([1],)),
+            ExecutionResult(arguments=([],), arguments_after=([],)),
+            False,
+            None,
+            None,
+        )
+        output = StringIO()
+        with redirect_stdout(output):
+            print_results({"case": result})
+
+        self.assertIn("case: DIFFERENT", output.getvalue())
+        self.assertIn("1 different.", output.getvalue())
+
+    def test_unknown_mutations_do_not_print_match(self):
+        result = ComparisonResults(
+            ExecutionResult(arguments=(1,)),
+            ExecutionResult(arguments=(1,)),
+            False,
+            None,
+            None,
+        )
+        output = StringIO()
+        with redirect_stdout(output):
+            print_results({"case": result})
+
+        self.assertIn("case: INCOMPLETE", output.getvalue())
+        self.assertIn("mutation comparison unavailable", output.getvalue())
+        self.assertNotIn("MATCH", output.getvalue())
+
+    def test_return_difference_is_reported_with_unknown_mutations(self):
+        result = ComparisonResults(
+            ExecutionResult(arguments=(1,), value=1),
+            ExecutionResult(arguments=(1,), value=2),
+            True,
+            None,
+            None,
+        )
+        output = StringIO()
+        with redirect_stdout(output):
+            print_results({"case": result})
+
+        self.assertIn("case: DIFFERENT", output.getvalue())
+        self.assertIn("mutation comparison unavailable", output.getvalue())

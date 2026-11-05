@@ -17,9 +17,14 @@ def _execute(func: Callable, args: tuple[Any, ...]) -> ExecutionResult:
         value = func(*call_args)
     except Exception as error:  # noqa: BLE001 -- Capture arbitrary target-function failures as observations.
         return ExecutionResult(
-            starting_args, exception_type=type(error), exception_message=str(error)
+            starting_args,
+            arguments_after=deepcopy(call_args),
+            exception_type=type(error),
+            exception_message=str(error),
         )
-    return ExecutionResult(starting_args, value=deepcopy(value))
+    return ExecutionResult(
+        starting_args, arguments_after=deepcopy(call_args), value=deepcopy(value)
+    )
 
 
 def run_generated_inputs(

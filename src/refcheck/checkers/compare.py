@@ -1,10 +1,10 @@
-import math
 from collections.abc import Callable
 from typing import Any
 
 from refcheck.checkers.performance import get_performance
 from refcheck.execution.runner import run_generated_inputs
 from refcheck.models import ComparisonResults, ExecutionResult
+from refcheck.value_comparison import values_differ
 
 
 def _outcomes_differ(original: ExecutionResult, migrated: ExecutionResult) -> bool:
@@ -13,15 +13,7 @@ def _outcomes_differ(original: ExecutionResult, migrated: ExecutionResult) -> bo
             original.exception_type is not migrated.exception_type
             or original.exception_message != migrated.exception_message
         )
-    # Two scalar NaNs count as equivalent despite Python's NaN != NaN.
-    if (
-        isinstance(original.value, float)
-        and isinstance(migrated.value, float)
-        and math.isnan(original.value)
-        and math.isnan(migrated.value)
-    ):
-        return False
-    return original.value != migrated.value
+    return values_differ(original.value, migrated.value)
 
 
 def compare(
@@ -42,7 +34,6 @@ def compare(
             return_diff=_outcomes_differ(original, migrated),
             performance_original=None,
             performance_migrated=None,
-            mutation_diff=False,
         )
         for case_name, (original, migrated) in results.items()
     }
@@ -80,6 +71,5 @@ def compare_with_performance(
             return_diff=_outcomes_differ(original, migrated),
             performance_original=original_time,
             performance_migrated=migrated_time,
-            mutation_diff=False,
         )
     return comparison_results

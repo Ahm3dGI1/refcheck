@@ -1,5 +1,7 @@
+import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -41,8 +43,49 @@ class CliTests(unittest.TestCase):
     def test_missing_function_prints_usage(self):
         process = self.run_cli()
 
+        self.assertEqual(process.returncode, 2)
+        self.assertIn("usage:", process.stderr)
+
+    def test_output_option_writes_report_and_keeps_summary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "comparison report.json"
+            process = self.run_cli(
+                "benchmarks.comparison_cases:double_original",
+                "benchmarks.comparison_cases:double_equivalent",
+                "--output",
+                str(path),
+            )
+            self.assertEqual(process.returncode, 0, process.stderr)
+            report = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertIn("MATCH", process.stdout)
+        self.assertIn("JSON report written to", process.stdout)
+        self.assertEqual(report["schema_version"], 1)
+        self.assertGreater(report["summary"]["total_cases"], 0)
+        self.assertEqual(report["summary"]["different_cases"], 0)
+        self.assertEqual(
+            report["functions"]["original"],
+            "benchmarks.comparison_cases:double_original",
+        )
+
+    def test_report_write_error_is_clear(self):
+        with tempfile.TemporaryDirectory() as directory:
+            process = self.run_cli(
+                "benchmarks.comparison_cases:double_original",
+                "benchmarks.comparison_cases:double_equivalent",
+                "--output",
+                str(Path(directory) / "missing" / "report.json"),
+            )
+
         self.assertEqual(process.returncode, 1)
-        self.assertIn("Usage:", process.stdout)
+        self.assertIn("Could not write JSON report:", process.stderr)
+        self.assertNotIn("Traceback", process.stderr)
+
+    def test_help_describes_output_option(self):
+        process = self.run_cli("--help")
+
+        self.assertEqual(process.returncode, 0)
+        self.assertIn("--output", process.stdout)
 
     def test_mutation_only_difference_is_reported(self):
         result = ComparisonResults(

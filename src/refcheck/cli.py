@@ -48,9 +48,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             "--max-cases",
             type=int,
             metavar="INT",
+            default=100,
             help="define maximum number of cases to test against (default: 100)",
         )
     options = parser.parse_args(argv)
+
+    if options.max_cases < 1:
+        parser.error("--max-cases must be positive")
+        return 1
+
     original_func = load_function_from_file(options.original_func_path)
     modified_func = load_function_from_file(options.modified_func_path)
 

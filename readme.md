@@ -67,7 +67,7 @@ timed = compare_with_performance(original, migrated, cases, num_executions=100)
 print(timed["sorting"].performance_original)  # Average seconds per call.
 ```
 
-Omit `cases` to generate inputs: `compare(original, migrated, max_examples=100)`.
+Omit `cases` to generate inputs: `compare(original, migrated, max_cases=100)`.
 Generation requires annotations on every parameter and supports fixed positional
 parameters, using Hypothesis's `st.from_type()` to resolve their types. Explicit
 cases do not require annotations. Both functions must accept the supplied call.

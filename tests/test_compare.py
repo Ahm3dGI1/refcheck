@@ -52,14 +52,14 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(results, {})
 
     def test_generated_cases_are_collected(self):
-        results = compare(simple_original, simple_equivalent, max_examples=5)
+        results = compare(simple_original, simple_equivalent, max_cases=5)
 
         self.assertGreater(len(results), 0)
         self.assertLessEqual(len(results), 5)
         self.assertTrue(all(not result.return_diff for result in results.values()))
 
     def test_generated_differences_are_reported(self):
-        results = compare(simple_original, simple_changed, max_examples=5)
+        results = compare(simple_original, simple_changed, max_cases=5)
 
         self.assertTrue(results)
         self.assertTrue(all(result.return_diff for result in results.values()))

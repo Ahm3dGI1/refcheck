@@ -44,11 +44,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         metavar="PATH",
         help="Write a JSON report (replaces an existing file)",
     )
+    parser.add_argument(
+            "--max-cases",
+            type=int,
+            metavar="INT",
+            help="define maximum number of cases to test against (default: 100)",
+        )
     options = parser.parse_args(argv)
     original_func = load_function_from_file(options.original_func_path)
     modified_func = load_function_from_file(options.modified_func_path)
 
-    results = compare(original_func, modified_func, max_examples=10)
+    results = compare(original_func, modified_func, max_cases=options.max_cases)
     print_results(results)
     if options.output is not None:
         try:

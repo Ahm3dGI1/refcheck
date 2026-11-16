@@ -21,11 +21,11 @@ def compare(
     migrated_func: Callable,
     input_data: dict[str, list[Any]] | None = None,
     *,
-    max_examples: int = 10,
+    max_cases: int = 100,
 ) -> dict[str, ComparisonResults]:
     """Compare returns and exceptions using explicit or generated inputs."""
     results = run_generated_inputs(
-        original_func, migrated_func, max_examples, input_data=input_data
+        original_func, migrated_func, max_cases, input_data=input_data
     )
     return {
         case_name: ComparisonResults(
@@ -44,14 +44,14 @@ def compare_with_performance(
     migrated_func: Callable,
     input_data: dict[str, list[Any]] | None = None,
     *,
-    max_examples: int = 10,
+    max_cases: int = 100,
     num_executions: int = 1000,
 ) -> dict[str, ComparisonResults]:
     """Compare outcomes and average timings; exception cases are not timed."""
     if num_executions < 1:
         raise ValueError("num_executions must be positive")
     results = run_generated_inputs(
-        original_func, migrated_func, max_examples, input_data=input_data
+        original_func, migrated_func, max_cases, input_data=input_data
     )
     comparison_results = {}
     for case_name, (original, migrated) in results.items():

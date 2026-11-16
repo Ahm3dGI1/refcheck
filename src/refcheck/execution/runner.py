@@ -30,7 +30,7 @@ def _execute(func: Callable, args: tuple[Any, ...]) -> ExecutionResult:
 def run_generated_inputs(
     original_func: Callable,
     migrated_func: Callable,
-    max_examples: int = 10,
+    max_cases: int = 100,
     *,
     input_data: dict[str, list[Any]] | None = None,
 ) -> dict[str, tuple[ExecutionResult, ExecutionResult]]:
@@ -57,7 +57,7 @@ def run_generated_inputs(
     else:
         strategy = generate_inputs_strategies(original_func)
 
-        @settings(max_examples=max_examples, deadline=None, database=None)
+        @settings(max_examples=max_cases, deadline=None, database=None)
         @given(args=strategy)
         def run_case(args):
             run_pair(f"case_{len(results) + 1}", args)

@@ -37,7 +37,7 @@ class ReportingTests(unittest.TestCase):
         )
         case = report["cases"][0]
 
-        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["schema_version"], 2)
         self.assertEqual(report["functions"]["original"], "example:in_place")
         self.assertEqual(
             report["summary"],

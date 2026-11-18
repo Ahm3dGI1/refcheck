@@ -28,8 +28,9 @@ Each function reference can be an importable `module:function` or a file path:
 python -m refcheck.cli .\benchmarks\comparison_cases.py:double_original .\benchmarks\comparison_cases.py:double_equivalent
 ```
 
-The CLI uses a generation budget of 10 examples based on the original function's
-type annotations. Both functions receive independent copies of each case's
+The CLI uses a generation budget of 100 examples, configurable with `--max-cases`.
+Inputs are based on the original function's type annotations.
+Both functions receive independent copies of each case's
 arguments. It prints `MATCH`, `DIFFERENT`, or `INCOMPLETE` when mutation snapshots
 are unavailable and no other difference is known. Differences do not cause a
 nonzero exit code.
@@ -92,8 +93,52 @@ types and messages match. Mutation differences are keyed by argument position.
 `{}` means checked and equal; `null` means unavailable.
 
 NaN/infinity, tuples, and dictionaries with non-string keys use `$type` markers.
-Unsupported objects are recorded with their Python type and `repr`. Reports are
-for inspection, not automatic replay.
+Unsupported objects are recorded with their Python type and `repr`.
+
+## Replay a report
+
+New reports use schema version 2 and mark whether each case's starting inputs
+can be replayed. Replay supports null, booleans, integers, finite floats, strings,
+lists, and dictionaries with string keys. Tuples, non-finite floats, custom
+objects, and shared or circular container references are recorded for inspection
+but cannot be replayed yet. Ordinary dictionaries containing `$type` are replayed
+as dictionaries, never interpreted as Python-object descriptions.
+
+```powershell
+# Every case, without generating new inputs.
+python -m refcheck.cli benchmarks.comparison_cases:double_original benchmarks.comparison_cases:double_changed --replay report.json
+
+# Cases marked different in the saved report; write fresh results separately.
+python -m refcheck.cli benchmarks.comparison_cases:double_original benchmarks.comparison_cases:double_changed --replay report.json --select different --output replayed.json
+
+# Specific cases, in the requested order.
+python -m refcheck.cli benchmarks.comparison_cases:double_original benchmarks.comparison_cases:double_changed --replay report.json --case case_1 --case case_3
+```
+
+`--select` accepts `all`, `different`, `match`, or `incomplete`. It cannot be
+combined with `--case`; repeat `--case` for multiple names. `--max-cases` is only
+for generation and cannot be combined with `--replay`.
+
+Selection uses saved statuses, but outcomes are recalculated: a previously
+different case may now match. Unknown case names, empty status selections, and
+unsupported selected inputs produce errors rather than being silently skipped.
+An empty report replays zero cases. All selected inputs and argument counts are
+validated before executing targets. Version 1 reports lack replay metadata and
+must be regenerated before replay.
+
+Replay leaves the source file unchanged and refuses to write output over it.
+New output records the source report path and selected case names in
+`replay_source`. It restores argument values, not globals, randomness, databases,
+files, or other external state.
+
+The same path is available from Python:
+
+```python
+from refcheck.replay import load_replay_cases
+
+cases = load_replay_cases("report.json", status="different")
+results = compare(original, migrated, input_data=cases)
+```
 
 ## Current limits
 

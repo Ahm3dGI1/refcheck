@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from refcheck.models import ComparisonResults, ExecutionResult
+from refcheck.replay import REPORT_SCHEMA_VERSION, replay_issue
 
 
 def _type_name(value: Any) -> str:
@@ -93,6 +94,7 @@ def build_report(
     *,
     original_reference: str | None = None,
     migrated_reference: str | None = None,
+    replay_source: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build report data without writing files or changing execution results."""
     cases = []
@@ -104,10 +106,14 @@ def build_report(
         different_cases += different
         incomplete_cases += incomplete
         status = "different" if different else "incomplete" if incomplete else "match"
+        issue = replay_issue(list(result.execution_Result_original.arguments))
         cases.append(
             {
                 "name": name,
                 "status": status,
+                "replay": {"supported": True}
+                if issue is None
+                else {"supported": False, "reason": issue},
                 "original": _execution_report(result.execution_Result_original),
                 "migrated": _execution_report(result.execution_Result_migrated),
                 "return_diff": result.return_diff,
@@ -125,8 +131,8 @@ def build_report(
                 },
             }
         )
-    return {
-        "schema_version": 1,
+    report = {
+        "schema_version": REPORT_SCHEMA_VERSION,
         "functions": {"original": original_reference, "migrated": migrated_reference},
         "summary": {
             "total_cases": len(cases),
@@ -135,6 +141,9 @@ def build_report(
         },
         "cases": cases,
     }
+    if replay_source is not None:
+        report["replay_source"] = replay_source
+    return report
 
 
 def write_json_report(
@@ -143,12 +152,14 @@ def write_json_report(
     *,
     original_reference: str | None = None,
     migrated_reference: str | None = None,
+    replay_source: dict[str, Any] | None = None,
 ) -> Path:
     """Write an indented report, replacing an existing file at path."""
     report = build_report(
         results,
         original_reference=original_reference,
         migrated_reference=migrated_reference,
+        replay_source=replay_source,
     )
     # Serialize before opening the file, so serialization errors cannot truncate it.
     contents = json.dumps(report, indent=2, ensure_ascii=True, allow_nan=False)
